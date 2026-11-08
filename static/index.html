@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Is this tweet sarcastic?</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<main>
+  <!-- Each <section> is one screen; app.js shows one at a time. -->
+
+  <section id="home" hidden>
+    <h1>Is this tweet sarcastic?</h1>
+    <p>A CSE 594 study. There are two versions of the task:</p>
+    <ul>
+      <li><a href="/baseline">Version A: on your own</a></li>
+      <li><a href="/ai">Version B: with AI suggestions</a></li>
+    </ul>
+  </section>
+
+  <section id="welcome" hidden>
+    <h1>Is this tweet sarcastic?</h1>
+    <p class="lead">
+      A short CSE 594 study of how people judge sarcasm.
+      You'll read <b><span class="n-trials"></span> short tweets</b>. About 3&ndash;5 minutes, no time limit.
+    </p>
+
+    <div class="card">
+      <h2>Your task</h2>
+      <p>Decide whether each tweet's author <b>meant it sarcastically</b>: they meant something
+        different from (often the opposite of) what the words literally say. Irony, exaggeration,
+        understatement, and rhetorical questions count when the author doesn't mean the literal statement.</p>
+      <ul>
+        <li>The correct answers come from the tweets' <b>own authors</b>, so judge what the author meant.</li>
+        <li>Many tweets are by UK users about politics, football, and TV. If you don't know a reference,
+          give your best guess.</li>
+        <li>Unsure? Pick a <b>"Probably&hellip;"</b> answer.</li>
+        <li>Please don't look things up or use other AI tools. One item checks that you're reading carefully.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Examples</h2>
+      <!-- From the iSarcasmEval training split (not used in the study), labeled by their authors. -->
+      <div class="example"><q>Love that someone broke into my car this morning</q><span class="tag sarc">Sarcastic</span></div>
+      <div class="example"><q>What a horrible day 😔</q><span class="tag lit">Not sarcastic</span></div>
+      <div class="example"><q>I am so ridiculously proud of the job I do!💜</q><span class="tag lit">Not sarcastic</span></div>
+    </div>
+
+    <!-- The only difference between the two versions' instructions: the sentence in this card. -->
+    <div class="card">
+      <h2>This version</h2>
+      <p class="baseline-only">You will judge each tweet on your own. No AI suggestions are shown.</p>
+      <p class="ai-only">Each tweet comes with a suggestion from an AI model: its answer, its
+        confidence (50&ndash;100), and a short reason. The AI can be wrong. <b>The final answer is yours.</b></p>
+    </div>
+
+    <p class="muted">Content note: some tweets contain strong language or mention politics or COVID-19.</p>
+
+    <details>
+      <summary>About this study and your data</summary>
+      <ul>
+        <li>This is a class study for CSE 594 (Human-AI Interaction) comparing how well people judge
+          sarcasm with and without AI suggestions.</li>
+        <li>Tweets come from the public iSarcasmEval research dataset (SemEval 2022).</li>
+        <li>We record your uniqname, your answers (including any you change), how long each answer
+          takes, whether you leave the page during a tweet, and any comments. Nothing else.</li>
+        <li>Only the student running the study and the course staff see the data, and it is used only
+          for this assignment.</li>
+        <li>Taking part is voluntary. You can stop at any time by closing the page.</li>
+      </ul>
+    </details>
+
+    <label for="uniqname">Your uniqname <small>(use the same one for both versions of this study)</small></label>
+    <input id="uniqname" autocomplete="off" placeholder="e.g. abhipol">
+    <button id="start" class="primary" disabled>I agree, start</button>
+    <p class="muted">By starting, you agree to take part in this study.</p>
+  </section>
+
+  <section id="trial" hidden>
+    <div class="progress"><div id="bar"></div></div>
+    <div class="trial-top">
+      <span class="muted" id="counter"></span>
+      <details class="reminder">
+        <summary>Instructions</summary>
+        <p><b>Sarcastic</b> = the author meant something different from (often the opposite of) what
+          the words literally say. Answers come from the authors themselves.
+          Unsure? Pick a "Probably&hellip;" answer.</p>
+      </details>
+    </div>
+    <blockquote id="tweet"></blockquote>
+
+    <div id="ai-box" class="ai-box" hidden>
+      <div class="ai-head">AI suggestion</div>
+      <div id="ai-loading" class="muted">Thinking&hellip;</div>
+      <div id="ai-result" hidden>
+        <div><b id="ai-label"></b> <span class="muted">&middot; confidence <span id="ai-conf"></span>/100</span></div>
+        <p id="ai-expl"></p>
+      </div>
+    </div>
+
+    <details class="trial-comment">
+      <summary>Add a comment <small>(optional, before you answer)</small></summary>
+      <textarea id="trial-comment" rows="2" maxlength="1000"
+        placeholder="e.g. didn't know the reference, the tweet is unclear, I clicked the wrong answer"></textarea>
+    </details>
+
+    <p class="question">Did the author mean this sarcastically?</p>
+    <p id="revisit-note" class="note" hidden>You already answered this tweet; your answer is outlined.
+      Choose an answer (the same or a different one) to continue.</p>
+    <div class="answers">
+      <button class="sarc strong" data-answer="sarcastic" data-certainty="definitely"><kbd>1</kbd>Definitely sarcastic</button>
+      <button class="sarc" data-answer="sarcastic" data-certainty="probably"><kbd>2</kbd>Probably sarcastic</button>
+      <button class="lit" data-answer="not_sarcastic" data-certainty="probably"><kbd>3</kbd>Probably not sarcastic</button>
+      <button class="lit strong" data-answer="not_sarcastic" data-certainty="definitely"><kbd>4</kbd>Definitely not sarcastic</button>
+    </div>
+    <div class="trial-nav">
+      <button id="back" class="link-button">&larr; Previous tweet</button>
+      <span class="muted hint">Tip: keys 1&ndash;4 also work.</span>
+    </div>
+  </section>
+
+  <section id="failed" hidden>
+    <h1>Attention check missed</h1>
+    <p>One of the items asked for a specific answer, and a different one was chosen.
+      Please start over and read each item carefully. You will get a new set of tweets.</p>
+    <button id="restart" class="primary">Start over</button>
+  </section>
+
+  <section id="survey" hidden>
+    <h1>Almost done</h1>
+    <form id="survey-form">
+      <fieldset class="scale" data-name="mental_demand">
+        <legend>How mentally demanding was this task?</legend>
+        <span class="ends"><span>Very low</span><span>Very high</span></span>
+      </fieldset>
+      <fieldset class="scale ai-only" data-name="ai_trust">
+        <legend>How much did you trust the AI's suggestions?</legend>
+        <span class="ends"><span>Not at all</span><span>Completely</span></span>
+      </fieldset>
+      <fieldset class="scale ai-only" data-name="ai_helpful">
+        <legend>How helpful were the AI's suggestions?</legend>
+        <span class="ends"><span>Not at all</span><span>Very helpful</span></span>
+      </fieldset>
+      <label for="comment">Anything else? <small>(optional)</small></label>
+      <textarea id="comment" rows="3" maxlength="2000"></textarea>
+      <div class="trial-nav">
+        <button id="survey-back" class="link-button" type="button">&larr; Back to the last tweet</button>
+        <button class="primary" type="submit">Submit</button>
+      </div>
+    </form>
+  </section>
+
+  <section id="done" hidden>
+    <h1>✓ Thank you, you're done!</h1>
+    <p>All your answers have been saved.</p>
+    <p id="next-step"></p>
+  </section>
+
+  <p id="error" class="error" hidden></p>
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>
